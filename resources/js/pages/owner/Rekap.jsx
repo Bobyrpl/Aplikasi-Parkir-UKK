@@ -24,15 +24,79 @@ export default function Rekap() {
         }
     }
 
+    function escapeCsv(value) {
+        const str = String(value ?? '');
+        // Bungkus dengan tanda kutip kalau ada koma, kutip, atau baris baru
+        if (/[",\n]/.test(str)) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    }
+
+    function handleExportCsv() {
+        if (!hasil) return;
+
+        const header = ['Plat Nomor', 'Area', 'Waktu Masuk', 'Waktu Keluar', 'Durasi (jam)', 'Biaya (Rp)'];
+        const rows = hasil.data.map((item) => [
+            item.kendaraan?.plat_nomor ?? '',
+            item.area?.nama_area ?? '',
+            new Date(item.waktu_masuk).toLocaleString('id-ID'),
+            item.waktu_keluar ? new Date(item.waktu_keluar).toLocaleString('id-ID') : '',
+            item.durasi_jam ?? 0,
+            item.biaya_total ?? 0,
+        ]);
+
+        const summaryRows = [
+            [],
+            ['Periode', hasil.periode],
+            ['Total Transaksi', hasil.total_transaksi],
+            ['Total Pendapatan (Rp)', hasil.total_pendapatan],
+        ];
+
+        const csvLines = [header, ...rows, ...summaryRows]
+            .map((row) => row.map(escapeCsv).join(','))
+            .join('\r\n');
+
+        // Tambahkan BOM biar Excel baca karakter UTF-8 (mis. simbol Rp) dengan benar
+        const blob = new Blob(['\ufeff' + csvLines], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `rekap-transaksi_${dari}_sd_${sampai}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function handleCetak() {
+        window.print();
+    }
+
     return (
         <div>
+            <style>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    #rekap-print-area, #rekap-print-area * { visibility: visible; }
+                    #rekap-print-area {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                    }
+                    .no-print { display: none !important; }
+                }
+            `}</style>
+
             <PageHeader
                 eyebrow="LAPORAN"
                 title="Rekap Transaksi"
                 description="Lihat total transaksi & pendapatan pada rentang waktu tertentu."
             />
 
-            <Card className="p-5 mb-6 max-w-2xl">
+            <Card className="p-5 mb-6 max-w-2xl no-print">
                 <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
                     <div>
                         <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">DARI TANGGAL</label>
@@ -50,7 +114,21 @@ export default function Rekap() {
             </Card>
 
             {hasil && (
-                <>
+                <div id="rekap-print-area">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                        <p className="hidden print:block font-display text-lg text-[#14181F]">
+                            Rekap Transaksi — {hasil.periode}
+                        </p>
+                        <div className="flex gap-2 no-print ml-auto">
+                            <Button variant="ghost" onClick={handleExportCsv}>
+                                Export CSV
+                            </Button>
+                            <Button variant="ghost" onClick={handleCetak}>
+                                Cetak
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4 mb-6 max-w-md">
                         <StatCard label="TOTAL TRANSAKSI" value={hasil.total_transaksi} />
                         <StatCard
@@ -85,7 +163,7 @@ export default function Rekap() {
                             </tr>
                         )}
                     </Table>
-                </>
+                </div>
             )}
         </div>
     );

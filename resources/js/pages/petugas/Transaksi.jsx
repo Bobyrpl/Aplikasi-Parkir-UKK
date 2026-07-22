@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { PageHeader, Table, Badge } from '../../components/ui';
+import { PageHeader, Table, Badge, Button } from '../../components/ui';
+import StrukCard from '../../components/StrukCard';
 
 export default function Transaksi() {
     const [data, setData] = useState([]);
+    const [struk, setStruk] = useState(null);
+    const [loadingId, setLoadingId] = useState(null);
 
     useEffect(() => {
         async function load() {
@@ -13,6 +16,18 @@ export default function Transaksi() {
         load();
     }, []);
 
+    async function handleCetakUlang(id) {
+        setLoadingId(id);
+        try {
+            const res = await api.get(`/transaksi/${id}/struk`);
+            setStruk(res.data);
+        } catch (err) {
+            alert('Gagal memuat struk transaksi ini');
+        } finally {
+            setLoadingId(null);
+        }
+    }
+
     return (
         <div>
             <PageHeader
@@ -21,7 +36,7 @@ export default function Transaksi() {
                 description="Daftar seluruh transaksi parkir yang tercatat."
             />
 
-            <Table columns={['Plat Nomor', 'Area', 'Masuk', 'Keluar', 'Biaya', 'Status']}>
+            <Table columns={['Plat Nomor', 'Area', 'Masuk', 'Keluar', 'Biaya', 'Status', 'Aksi']}>
                 {data.map((item) => (
                     <tr key={item.id_parkir}>
                         <td className="px-4 py-3 font-mono uppercase">{item.kendaraan?.plat_nomor}</td>
@@ -42,16 +57,29 @@ export default function Transaksi() {
                                 <Badge tone="success">Selesai</Badge>
                             )}
                         </td>
+                        <td className="px-4 py-3">
+                            {item.status === 'keluar' && (
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => handleCetakUlang(item.id_parkir)}
+                                    disabled={loadingId === item.id_parkir}
+                                >
+                                    {loadingId === item.id_parkir ? 'Memuat...' : 'Cetak Ulang'}
+                                </Button>
+                            )}
+                        </td>
                     </tr>
                 ))}
                 {data.length === 0 && (
                     <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-[#8B94A3] text-sm">
+                        <td colSpan={7} className="px-4 py-6 text-center text-[#8B94A3] text-sm">
                             Belum ada transaksi.
                         </td>
                     </tr>
                 )}
             </Table>
+
+            <StrukCard struk={struk} onClose={() => setStruk(null)} />
         </div>
     );
 }

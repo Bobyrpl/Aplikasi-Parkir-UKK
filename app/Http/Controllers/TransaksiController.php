@@ -150,6 +150,17 @@ class TransaksiController extends Controller
         ]);
     }
 
+    // GET /api/transaksi/kendaraan-didalam
+    // Jumlah kendaraan yang masih di dalam area parkir (belum tercatat keluar)
+    public function kendaraanDidalam()
+    {
+        $jumlah = Transaksi::where('status', 'masuk')->count();
+
+        return response()->json([
+            'jumlah_kendaraan_didalam' => $jumlah,
+        ]);
+    }
+
     // GET /api/transaksi/rekap-harian
     // Rekap transaksi & pendapatan harian untuk 7 hari terakhir (dipakai grafik dashboard)
     public function rekapHarian()

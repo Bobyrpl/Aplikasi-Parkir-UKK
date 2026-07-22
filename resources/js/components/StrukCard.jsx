@@ -4,14 +4,34 @@ export default function StrukCard({ struk, onClose }) {
     const formatRupiah = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
     const formatWaktu = (t) => (t ? new Date(t).toLocaleString('id-ID') : '-');
 
+    function handleCetak() {
+        window.print();
+    }
+
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50 print:bg-white print:p-0">
+            {/* Saat print: sembunyikan semua elemen lain di halaman, tampilkan hanya #struk-print-area */}
+            <style>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    #struk-print-area, #struk-print-area * { visibility: visible; }
+                    #struk-print-area {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        margin: 0;
+                    }
+                    .no-print { display: none !important; }
+                }
+            `}</style>
+
             <div className="relative w-full max-w-sm">
                 {/* notch kiri-kanan meniru sobekan tiket */}
-                <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-[#14181F]" />
-                <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-[#14181F]" />
+                <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-[#14181F] no-print" />
+                <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-[#14181F] no-print" />
 
-                <div className="bg-[#F7F7F5] text-[#14181F] rounded-lg overflow-hidden">
+                <div id="struk-print-area" className="bg-[#F7F7F5] text-[#14181F] rounded-lg overflow-hidden">
                     <div
                         className="h-2 w-full"
                         style={{
@@ -50,12 +70,20 @@ export default function StrukCard({ struk, onClose }) {
                     </div>
                 </div>
 
-                <button
-                    onClick={onClose}
-                    className="mt-4 w-full rounded-md bg-[#1B212B] text-[#EDEFF2] py-2.5 text-sm hover:bg-[#262E3A] transition-colors"
-                >
-                    Tutup
-                </button>
+                <div className="mt-4 flex gap-2 no-print">
+                    <button
+                        onClick={handleCetak}
+                        className="flex-1 rounded-md bg-[#F4B400] text-[#14181F] py-2.5 text-sm font-semibold hover:bg-[#F4B400]/90 transition-colors"
+                    >
+                        Cetak Struk
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="flex-1 rounded-md bg-[#1B212B] text-[#EDEFF2] py-2.5 text-sm hover:bg-[#262E3A] transition-colors"
+                    >
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
     );

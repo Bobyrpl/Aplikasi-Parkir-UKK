@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { PageHeader, StatCard, Card } from '../../components/ui';
+import { PageHeader, StatCard, Card, Table, Button } from '../../components/ui';
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis,
     CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import {
+    Document, Packer, Paragraph, Table as DocxTable, TableRow, TableCell,
+    TextRun, HeadingLevel, WidthType, AlignmentType,
+} from 'docx';
 
 export default function DashboardAdmin() {
     const [stats, setStats] = useState({ users: '—', tarif: '—', area: '—', kendaraan: '—' });
@@ -62,8 +66,118 @@ export default function DashboardAdmin() {
         { nama: 'Kendaraan', jumlah: Number(stats.kendaraan) || 0 },
     ];
 
+    function handleCetak() {
+        window.print();
+    }
+
+    async function handleDownloadWord() {
+        const formatRupiah = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
+
+        const headerCell = (text) =>
+            new TableCell({
+                shading: { fill: '1F2530' },
+                children: [new Paragraph({ children: [new TextRun({ text, bold: true, color: 'FFFFFF' })] })],
+            });
+
+        const bodyCell = (text, alignment = AlignmentType.LEFT) =>
+            new TableCell({ children: [new Paragraph({ text, alignment })] });
+
+        const rows = [
+            new TableRow({
+                children: [
+                    headerCell('Hari'),
+                    headerCell('Tanggal'),
+                    headerCell('Jumlah Kendaraan'),
+                    headerCell('Pendapatan'),
+                ],
+            }),
+            ...rekap.map((d) => {
+                const date = new Date(d.tanggal);
+                const hari = date.toLocaleDateString('id-ID', { weekday: 'long' });
+                const tanggal = date.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                });
+                return new TableRow({
+                    children: [
+                        bodyCell(hari),
+                        bodyCell(tanggal),
+                        bodyCell(String(d.jumlah_transaksi), AlignmentType.CENTER),
+                        bodyCell(formatRupiah(d.pendapatan), AlignmentType.RIGHT),
+                    ],
+                });
+            }),
+            new TableRow({
+                children: [
+                    new TableCell({
+                        columnSpan: 2,
+                        children: [new Paragraph({ children: [new TextRun({ text: 'TOTAL', bold: true })] })],
+                    }),
+                    new TableCell({
+                        children: [
+                            new Paragraph({
+                                children: [new TextRun({ text: String(totalTransaksi7Hari), bold: true })],
+                                alignment: AlignmentType.CENTER,
+                            }),
+                        ],
+                    }),
+                    new TableCell({
+                        children: [
+                            new Paragraph({
+                                children: [new TextRun({ text: formatRupiah(totalPendapatan7Hari), bold: true })],
+                                alignment: AlignmentType.RIGHT,
+                            }),
+                        ],
+                    }),
+                ],
+            }),
+        ];
+
+        const doc = new Document({
+            sections: [
+                {
+                    children: [
+                        new Paragraph({ heading: HeadingLevel.HEADING_1, text: 'Laporan Transaksi Parkir' }),
+                        new Paragraph({ text: 'Periode: 7 Hari Terakhir', spacing: { after: 200 } }),
+                        new DocxTable({ width: { size: 100, type: WidthType.PERCENTAGE }, rows }),
+                        new Paragraph({ text: '', spacing: { before: 200 } }),
+                        new Paragraph({ text: `Dicetak pada: ${new Date().toLocaleString('id-ID')}` }),
+                    ],
+                },
+            ],
+        });
+
+        const blob = await Packer.toBlob(doc);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `laporan-transaksi-${new Date().toISOString().slice(0, 10)}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    const totalTransaksi7Hari = rekap.reduce((sum, d) => sum + (d.jumlah_transaksi || 0), 0);
+    const totalPendapatan7Hari = rekap.reduce((sum, d) => sum + (d.pendapatan || 0), 0);
+
     return (
         <div>
+            <style>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    #laporan-print-area, #laporan-print-area * { visibility: visible; }
+                    #laporan-print-area {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                    }
+                    .no-print { display: none !important; }
+                }
+            `}</style>
+
             <PageHeader
                 eyebrow="PANEL ADMIN"
                 title="Ringkasan Sistem"
@@ -77,7 +191,7 @@ export default function DashboardAdmin() {
                 <StatCard label="KENDARAAN TERDAFTAR" value={stats.kendaraan} accent="#E5484D" />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="grid md:grid-cols-2 gap-6 mb-8 no-print">
                 <Card className="p-6">
                     <h2 className="font-display text-base text-[#EDEFF2] mb-4">
                         Perbandingan Data Master
@@ -139,7 +253,67 @@ export default function DashboardAdmin() {
                 </Card>
             </div>
 
-            <Card className="p-6">
+            <Card className="p-6 mb-8" id="laporan-print-area">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <div>
+                        <h2 className="font-display text-lg text-[#EDEFF2] print:text-[#14181F]">
+                            Tabel Laporan Transaksi (7 Hari Terakhir)
+                        </h2>
+                        <p className="hidden print:block text-xs text-[#6B7280] mt-1">
+                            Dicetak pada {new Date().toLocaleString('id-ID')}
+                        </p>
+                    </div>
+                    <div className="flex gap-2 no-print">
+                        <Button variant="ghost" onClick={handleDownloadWord}>
+                            Download Word
+                        </Button>
+                        <Button variant="ghost" onClick={handleCetak}>
+                            Cetak
+                        </Button>
+                    </div>
+                </div>
+
+                {loadingRekap ? (
+                    <p className="text-sm text-[#8B94A3]">Memuat data...</p>
+                ) : (
+                    <Table columns={['Tanggal', 'Jumlah Transaksi', 'Pendapatan']}>
+                        {rekap.map((d) => (
+                            <tr key={d.tanggal}>
+                                <td className="px-4 py-3 font-mono text-xs">
+                                    {new Date(d.tanggal).toLocaleDateString('id-ID', {
+                                        weekday: 'long',
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric',
+                                    })}
+                                </td>
+                                <td className="px-4 py-3 font-mono">{d.jumlah_transaksi}</td>
+                                <td className="px-4 py-3 font-mono">
+                                    Rp {Number(d.pendapatan).toLocaleString('id-ID')}
+                                </td>
+                            </tr>
+                        ))}
+                        {rekap.length === 0 && (
+                            <tr>
+                                <td colSpan={3} className="px-4 py-6 text-center text-[#8B94A3] text-sm">
+                                    Belum ada data transaksi.
+                                </td>
+                            </tr>
+                        )}
+                        {rekap.length > 0 && (
+                            <tr className="bg-[#1F2530] font-semibold">
+                                <td className="px-4 py-3 font-mono text-xs">TOTAL</td>
+                                <td className="px-4 py-3 font-mono">{totalTransaksi7Hari}</td>
+                                <td className="px-4 py-3 font-mono">
+                                    Rp {Number(totalPendapatan7Hari).toLocaleString('id-ID')}
+                                </td>
+                            </tr>
+                        )}
+                    </Table>
+                )}
+            </Card>
+
+            <Card className="p-6 no-print">
                 <h2 className="font-display text-lg text-[#EDEFF2] mb-2">
                     Akses cepat
                 </h2>

@@ -5,6 +5,7 @@ import { PageHeader, StatCard, Card, Button } from "../../components/ui";
 
 export default function DashboardPetugas() {
     const [hariIni, setHariIni] = useState({ transaksi: "—", pendapatan: "—" });
+    const [kendaraanDidalam, setKendaraanDidalam] = useState("—");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -29,7 +30,18 @@ export default function DashboardPetugas() {
                 setLoading(false);
             }
         }
+
+        async function loadKendaraanDidalam() {
+            try {
+                const res = await api.get("/transaksi/kendaraan-didalam");
+                setKendaraanDidalam(res.data?.jumlah_kendaraan_didalam ?? 0);
+            } catch (e) {
+                // biarkan tampil '—' kalau gagal fetch
+            }
+        }
+
         loadRekapHariIni();
+        loadKendaraanDidalam();
     }, []);
 
     return (
@@ -40,7 +52,7 @@ export default function DashboardPetugas() {
                 description="Catat kendaraan masuk/keluar dan pantau transaksi harian dari sini."
             />
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-3 gap-4 mb-8">
                 <StatCard
                     label="TRANSAKSI HARI INI"
                     value={loading ? "—" : hariIni.transaksi}
@@ -49,6 +61,11 @@ export default function DashboardPetugas() {
                     label="PENDAPATAN HARI INI"
                     value={loading ? "—" : hariIni.pendapatan}
                     accent="#35C48D"
+                />
+                <StatCard
+                    label="KENDARAAN DI DALAM"
+                    value={kendaraanDidalam}
+                    accent="#F4B400"
                 />
             </div>
 
