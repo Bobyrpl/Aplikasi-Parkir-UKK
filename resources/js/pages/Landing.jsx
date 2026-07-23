@@ -120,7 +120,7 @@ export default function Landing() {
                     </button>
                     <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full bg-[#F4B400]" />
-                        <span className="font-display text-xl tracking-tight">ParkirKu</span>
+                        <span className="font-display text-xl tracking-tight">Parkir Pelabuhan Tanjung Perak</span>
                     </div>
                 </div>
 
@@ -360,7 +360,7 @@ export default function Landing() {
 
             <footer className="border-t border-white/5">
                 <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex items-center justify-between text-xs text-[#8B94A3]">
-                    <span>© {new Date().getFullYear()} ParkirKu</span>
+                    <span>© {new Date().getFullYear()} Parkir Pelabuhan Tanjung Perak</span>
                     <span className="font-mono">SISTEM MANAJEMEN PARKIR</span>
                 </div>
             </footer>

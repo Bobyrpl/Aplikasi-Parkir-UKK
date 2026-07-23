@@ -17,6 +17,8 @@ class AuthController extends Controller
      * Role otomatis "petugas" — role tidak boleh dipilih sendiri oleh
      * pengguna demi keamanan (admin/owner cuma boleh dibuat oleh admin
      * lewat menu Kelola User).
+     * Passkey langsung digenerate saat registrasi supaya bisa
+     * ditampilkan ke user (buat auto-login lain kali).
      */
     public function register(Request $request)
     {
@@ -45,6 +47,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('token-' . $user->username)->plainTextToken;
 
+        // Generate passkey langsung saat register (bukan cuma pas login)
+        $passkey = $this->buatPasskeyBaru($user);
+
         LogAktivitas::catat($user->id_user, 'Registrasi akun baru sebagai ' . $user->role);
 
         return response()->json([
@@ -56,7 +61,8 @@ class AuthController extends Controller
                 'no_telp'      => $user->no_telp,
                 'role'         => $user->role,
             ],
-            'token' => $token,
+            'token'         => $token,
+            'passkey_token' => $passkey,
         ], 201);
     }
 
