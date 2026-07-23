@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Register() {
     const [namaLengkap, setNamaLengkap] = useState('');
     const [username, setUsername] = useState('');
+    const [noTelp, setNoTelp] = useState('');
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [errors, setErrors] = useState({});
@@ -20,7 +21,7 @@ export default function Register() {
         setLoading(true);
 
         try {
-            await register(namaLengkap, username, password, passwordConfirmation);
+            await register(namaLengkap, username, noTelp, password, passwordConfirmation);
             // Role baru selalu "petugas", jadi langsung arahkan ke portal petugas
             navigate('/petugas');
         } catch (err) {
@@ -126,6 +127,24 @@ export default function Register() {
                             />
                             {errors.username && (
                                 <p className="mt-1 text-xs text-[#E5484D]">{errors.username[0]}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">
+                                NO. TELEPON
+                            </label>
+                            <input
+                                type="tel"
+                                value={noTelp}
+                                onChange={(e) => setNoTelp(e.target.value)}
+                                required
+                                pattern="[0-9]{10,15}"
+                                className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2.5 text-[#EDEFF2] text-sm focus:outline-none focus:ring-2 focus:ring-[#F4B400] focus:border-transparent"
+                                placeholder="mis. 081234567890"
+                            />
+                            {errors.no_telp && (
+                                <p className="mt-1 text-xs text-[#E5484D]">{errors.no_telp[0]}</p>
                             )}
                         </div>
 

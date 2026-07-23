@@ -18,7 +18,9 @@ public $timestamps = false;   // <-- TAMBAHKAN BARIS INI
     protected $fillable = [
         'nama_lengkap',
         'username',
+        'no_telp',
         'password',
+        'passkey_token',
         'role',
         'status_aktif',
     ];
@@ -26,6 +28,7 @@ public $timestamps = false;   // <-- TAMBAHKAN BARIS INI
     // Kolom yang disembunyikan saat model di-convert ke JSON/array
     protected $hidden = [
         'password',
+        'passkey_token',
     ];
 
     protected $casts = [
