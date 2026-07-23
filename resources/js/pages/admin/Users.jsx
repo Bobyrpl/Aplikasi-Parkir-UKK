@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { PageHeader, Card, Table, Button, Input, Badge } from '../../components/ui';
 
-const KOSONG = { nama_lengkap: '', username: '', password: '', role: 'petugas', status_aktif: true };
+const KOSONG = { nama_lengkap: '', username: '', no_telp: '', password: '', role: 'petugas', status_aktif: true };
 
 export default function Users() {
     const [data, setData] = useState([]);
@@ -44,6 +44,7 @@ export default function Users() {
         setForm({
             nama_lengkap: item.nama_lengkap,
             username: item.username,
+            no_telp: item.no_telp ?? '',
             password: '',
             role: item.role,
             status_aktif: !!item.status_aktif,
@@ -77,6 +78,10 @@ export default function Users() {
                         <div>
                             <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">USERNAME</label>
                             <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">NO. TELEPON</label>
+                            <Input value={form.no_telp} onChange={(e) => setForm({ ...form, no_telp: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">
@@ -119,11 +124,12 @@ export default function Users() {
                 </Card>
 
                 <div className="md:col-span-2">
-                    <Table columns={['Nama', 'Username', 'Role', 'Status', 'Aksi']}>
+                    <Table columns={['Nama', 'Username', 'No. Telepon', 'Role', 'Status', 'Aksi']}>
                         {data.map((item) => (
                             <tr key={item.id_user}>
                                 <td className="px-4 py-3">{item.nama_lengkap}</td>
                                 <td className="px-4 py-3 font-mono">{item.username}</td>
+                                <td className="px-4 py-3 font-mono">{item.no_telp || '—'}</td>
                                 <td className="px-4 py-3 capitalize">{item.role}</td>
                                 <td className="px-4 py-3">
                                     {item.status_aktif ? <Badge tone="success">Aktif</Badge> : <Badge tone="danger">Nonaktif</Badge>}
@@ -138,7 +144,7 @@ export default function Users() {
                         ))}
                         {data.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="px-4 py-6 text-center text-[#8B94A3] text-sm">
+                                <td colSpan={6} className="px-4 py-6 text-center text-[#8B94A3] text-sm">
                                     Belum ada pengguna.
                                 </td>
                             </tr>

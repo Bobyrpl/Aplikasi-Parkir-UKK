@@ -13,12 +13,32 @@ use Illuminate\Support\Facades\Validator;
 class TransaksiController extends Controller
 {
     // GET /api/transaksi
-    // Daftar transaksi (petugas), pakai limit/pagination biar tetap cepat
+    // GET /api/transaksi?dari=2026-01-08&sampai=2026-09-02
+    // Daftar transaksi (petugas), pakai limit/pagination biar tetap cepat.
+    // Bisa difilter berdasarkan rentang tanggal waktu_masuk (opsional).
     public function index(Request $request)
     {
-        $transaksi = Transaksi::with(['kendaraan:id_kendaraan,plat_nomor,jenis_kendaraan', 'area:id_area,nama_area'])
-            ->orderBy('id_parkir', 'desc')
-            ->paginate(10);
+        $validator = Validator::make($request->all(), [
+            'dari'   => 'nullable|date',
+            'sampai' => 'nullable|date|after_or_equal:dari',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $query = Transaksi::with(['kendaraan:id_kendaraan,plat_nomor,jenis_kendaraan', 'area:id_area,nama_area'])
+            ->orderBy('id_parkir', 'desc');
+
+        if ($request->filled('dari')) {
+            $query->whereDate('waktu_masuk', '>=', $request->dari);
+        }
+
+        if ($request->filled('sampai')) {
+            $query->whereDate('waktu_masuk', '<=', $request->sampai);
+        }
+
+        $transaksi = $query->paginate(10)->withQueryString();
 
         return response()->json($transaksi);
     }
