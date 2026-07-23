@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 | ROUTE PUBLIK (tidak perlu login)
 |--------------------------------------------------------------------------
 */
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 /*
@@ -93,5 +94,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/transaksi/rekap-harian', [TransaksiController::class, 'rekapHarian']);
-    
+
 });

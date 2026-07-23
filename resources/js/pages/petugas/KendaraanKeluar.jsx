@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { PageHeader, Table, Button, Badge } from '../../components/ui';
 import StrukCard from '../../components/StrukCard';
+import { useToast } from '../../context/ToastContext';
 
 export default function KendaraanKeluar() {
     const [data, setData] = useState([]);
     const [struk, setStruk] = useState(null);
     const [loadingId, setLoadingId] = useState(null);
+    const { showSuccess, showError } = useToast();
 
     async function load() {
         const res = await api.get('/transaksi');
@@ -24,9 +26,10 @@ export default function KendaraanKeluar() {
             await api.post(`/transaksi/${id}/keluar`);
             const res = await api.get(`/transaksi/${id}/struk`);
             setStruk(res.data);
+            showSuccess(`Kendaraan ${res.data.plat_nomor} berhasil dicatat keluar.`);
             load();
         } catch (err) {
-            alert('Gagal memproses kendaraan keluar');
+            showError(err.response?.data?.message || 'Gagal memproses kendaraan keluar, silakan coba lagi.');
         } finally {
             setLoadingId(null);
         }

@@ -2,28 +2,34 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function Login() {
+export default function Register() {
+    const [namaLengkap, setNamaLengkap] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
+    const [errors, setErrors] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { register } = useAuth();
     const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
         setError('');
+        setErrors({});
         setLoading(true);
 
         try {
-            const user = await login(username, password);
-            if (user.role === 'admin') navigate('/admin');
-            else if (user.role === 'petugas') navigate('/petugas');
-            else navigate('/owner');
+            await register(namaLengkap, username, password, passwordConfirmation);
+            // Role baru selalu "petugas", jadi langsung arahkan ke portal petugas
+            navigate('/petugas');
         } catch (err) {
-            setError(
-                err.response?.data?.message || 'Username atau password salah'
-            );
+            if (err.response?.status === 422) {
+                setErrors(err.response.data.errors || {});
+                setError(err.response.data.message || 'Data tidak valid');
+            } else {
+                setError(err.response?.data?.message || 'Registrasi gagal, coba lagi');
+            }
         } finally {
             setLoading(false);
         }
@@ -55,8 +61,8 @@ export default function Login() {
 
                     <div className="relative pl-10">
                         <p className="text-[#C3C9D3] text-sm leading-relaxed">
-                            Kelola area, tarif, dan transaksi parkir dalam satu
-                            portal — dari pintu masuk sampai cetak struk.
+                            Daftar sebagai petugas untuk mulai mencatat kendaraan
+                            masuk dan keluar di portal ini.
                         </p>
                         <div className="mt-6 flex gap-4 text-xs font-mono text-[#8B94A3]">
                             <span>ADMIN</span>
@@ -68,7 +74,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                {/* Panel kanan - form login */}
+                {/* Panel kanan - form register */}
                 <div className="bg-[#1F2530] p-10 flex flex-col justify-center">
                     <Link
                         to="/"
@@ -81,13 +87,31 @@ export default function Login() {
                     </Link>
 
                     <h1 className="font-display text-2xl text-[#EDEFF2] mb-1">
-                        Masuk ke akun
+                        Buat akun baru
                     </h1>
                     <p className="text-sm text-[#8B94A3] mb-8">
-                        Gunakan username dan password yang terdaftar.
+                        Akun baru terdaftar otomatis sebagai petugas.
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">
+                                NAMA LENGKAP
+                            </label>
+                            <input
+                                type="text"
+                                value={namaLengkap}
+                                onChange={(e) => setNamaLengkap(e.target.value)}
+                                required
+                                autoFocus
+                                className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2.5 text-[#EDEFF2] text-sm focus:outline-none focus:ring-2 focus:ring-[#F4B400] focus:border-transparent"
+                                placeholder="mis. Budi Santoso"
+                            />
+                            {errors.nama_lengkap && (
+                                <p className="mt-1 text-xs text-[#E5484D]">{errors.nama_lengkap[0]}</p>
+                            )}
+                        </div>
+
                         <div>
                             <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">
                                 USERNAME
@@ -97,10 +121,12 @@ export default function Login() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
-                                autoFocus
                                 className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2.5 text-[#EDEFF2] text-sm focus:outline-none focus:ring-2 focus:ring-[#F4B400] focus:border-transparent"
-                                placeholder="mis. admin"
+                                placeholder="mis. budi.santoso"
                             />
+                            {errors.username && (
+                                <p className="mt-1 text-xs text-[#E5484D]">{errors.username[0]}</p>
+                            )}
                         </div>
 
                         <div>
@@ -112,8 +138,27 @@ export default function Login() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                minLength={6}
                                 className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2.5 text-[#EDEFF2] text-sm focus:outline-none focus:ring-2 focus:ring-[#F4B400] focus:border-transparent"
-                                placeholder="••••••••"
+                                placeholder="minimal 6 karakter"
+                            />
+                            {errors.password && (
+                                <p className="mt-1 text-xs text-[#E5484D]">{errors.password[0]}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">
+                                KONFIRMASI PASSWORD
+                            </label>
+                            <input
+                                type="password"
+                                value={passwordConfirmation}
+                                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                                required
+                                minLength={6}
+                                className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2.5 text-[#EDEFF2] text-sm focus:outline-none focus:ring-2 focus:ring-[#F4B400] focus:border-transparent"
+                                placeholder="ulangi password"
                             />
                         </div>
 
@@ -128,13 +173,13 @@ export default function Login() {
                             disabled={loading}
                             className="w-full rounded-md bg-[#F4B400] text-[#14181F] font-medium py-2.5 text-sm hover:bg-[#e0a800] transition-colors disabled:opacity-60"
                         >
-                            {loading ? 'Memproses...' : 'Masuk'}
+                            {loading ? 'Memproses...' : 'Daftar'}
                         </button>
 
                         <p className="text-center text-sm text-[#8B94A3]">
-                            Belum punya akun?{' '}
-                            <Link to="/register" className="text-[#F4B400] hover:underline">
-                                Daftar di sini
+                            Sudah punya akun?{' '}
+                            <Link to="/login" className="text-[#F4B400] hover:underline">
+                                Masuk di sini
                             </Link>
                         </p>
                     </form>

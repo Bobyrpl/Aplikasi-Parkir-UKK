@@ -53,11 +53,6 @@ const GRAFIK_DATA = [
     { label: 'Sab', val: 65 },
 ];
 
-const FAQ = [
-    { q: 'Bagaimana cara mulai menggunakan ParkirKu?', a: 'Hubungi admin area parkir Anda untuk dibuatkan akun, lalu login sesuai peran (Admin/Petugas/Owner).' },
-    { q: 'Apakah bisa cetak struk otomatis?', a: 'Bisa. Petugas dapat mencetak struk langsung dari halaman transaksi.' },
-];
-
 function Bintang({ jumlah }) {
     return (
         <div style={{ display: 'flex', gap: 2 }} aria-label={`${jumlah} dari 5 bintang`}>
@@ -104,7 +99,7 @@ export default function Landing() {
                         <a href="#fitur" onClick={() => setSidebarOpen(false)} className="text-sm text-[#C3C9D3] py-2 border-b border-white/5">Fitur</a>
                         <a href="#informasi" onClick={() => setSidebarOpen(false)} className="text-sm text-[#C3C9D3] py-2 border-b border-white/5">Informasi</a>
                         <a href="#testimoni" onClick={() => setSidebarOpen(false)} className="text-sm text-[#C3C9D3] py-2 border-b border-white/5">Testimoni</a>
-                        <a href="#bantuan" onClick={() => setSidebarOpen(false)} className="text-sm text-[#C3C9D3] py-2 border-b border-white/5">Bantuan</a>
+                        <Link to="/bantuan" onClick={() => setSidebarOpen(false)} className="text-sm text-[#C3C9D3] py-2 border-b border-white/5">Bantuan</Link>
                         <Link to={navPath} onClick={() => setSidebarOpen(false)} className="mt-2 rounded-md bg-[#F4B400] text-[#14181F] font-medium px-4 py-2 text-sm text-center">
                             {navLabel}
                         </Link>
@@ -133,7 +128,7 @@ export default function Landing() {
                     <a href="#fitur" className="hover:text-[#EDEFF2]">Fitur</a>
                     <a href="#informasi" className="hover:text-[#EDEFF2]">Informasi</a>
                     <a href="#testimoni" className="hover:text-[#EDEFF2]">Testimoni</a>
-                    <a href="#bantuan" className="hover:text-[#EDEFF2]">Bantuan</a>
+                    <Link to="/bantuan" className="hover:text-[#EDEFF2]">Bantuan</Link>
                 </nav>
 
                 <Link
@@ -188,7 +183,18 @@ export default function Landing() {
                                 'repeating-linear-gradient(-45deg, #F4B400 0 18px, #14181F 18px 36px)',
                         }}
                     />
-                    <svg viewBox="0 0 320 200" className="relative w-full mb-4" aria-hidden="true">
+                    {/* Foto area parkir. Taruh file gambar Anda di public/images/hero-parkir.jpg.
+                        Kalau file belum ada / gagal dimuat, otomatis fallback ke ilustrasi SVG di bawah. */}
+                    <img
+                        src="/images/gambar.jpg"
+                        alt="Area parkir ParkirKu"
+                        className="relative w-full h-48 md:h-56 object-cover rounded-xl mb-4"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'block';
+                        }}
+                    />
+                    <svg viewBox="0 0 320 200" className="relative w-full mb-4" style={{ display: 'none' }} aria-hidden="true">
                         <rect x="10" y="140" width="300" height="10" rx="2" fill="#2A303B" />
                         <rect x="30" y="80" width="60" height="60" rx="8" fill="#F4B400" opacity="0.9" />
                         <rect x="110" y="60" width="70" height="80" rx="8" fill="#5DCAA5" opacity="0.85" />
@@ -238,7 +244,10 @@ export default function Landing() {
                     <p className="text-sm text-[#8B94A3] mb-6">Contoh grafik jumlah transaksi per hari</p>
                     <div className="flex items-end gap-4 h-32">
                         {GRAFIK_DATA.map((d) => (
-                            <div key={d.label} className="flex flex-col items-center gap-2 flex-1">
+                            <div
+                                key={d.label}
+                                className="flex flex-col items-center justify-end gap-2 flex-1 self-stretch"
+                            >
                                 <div
                                     className="w-full rounded-t-md bg-[#F4B400]"
                                     style={{ height: `${d.val}%` }}
@@ -308,14 +317,19 @@ export default function Landing() {
             </section>
 
             <section id="bantuan" className="max-w-7xl mx-auto px-6 md:px-12 pb-24">
-                <p className="font-display text-lg mb-6">Pertanyaan umum</p>
-                <div className="space-y-3">
-                    {FAQ.map((f) => (
-                        <div key={f.q} className="rounded-xl bg-[#1B212B] border border-white/5 p-5">
-                            <p className="text-sm font-medium mb-1">{f.q}</p>
-                            <p className="text-sm text-[#8B94A3]">{f.a}</p>
-                        </div>
-                    ))}
+                <div className="rounded-xl bg-[#1B212B] border border-white/5 p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <p className="font-display text-lg mb-1">Butuh bantuan?</p>
+                        <p className="text-sm text-[#8B94A3]">
+                            Lihat pertanyaan umum seputar akun dan cara pakai ParkirKu di halaman Bantuan.
+                        </p>
+                    </div>
+                    <Link
+                        to="/bantuan"
+                        className="rounded-md bg-[#F4B400] text-[#14181F] font-medium px-5 py-2.5 text-sm hover:bg-[#e0a800] transition-colors whitespace-nowrap"
+                    >
+                        Buka Halaman Bantuan
+                    </Link>
                 </div>
             </section>
 
@@ -326,9 +340,9 @@ export default function Landing() {
                         <p className="text-xs text-[#8B94A3] mb-3">
                             Hubungi admin area parkir Anda atau lihat FAQ di atas.
                         </p>
-                        <a href="#bantuan" onClick={() => setHelpOpen(false)} className="text-xs text-[#F4B400]">
-                            Lihat FAQ →
-                        </a>
+                        <Link to="/bantuan" onClick={() => setHelpOpen(false)} className="text-xs text-[#F4B400]">
+                            Buka Halaman Bantuan →
+                        </Link>
                     </div>
                 )}
                 <button

@@ -17,6 +17,21 @@ export function AuthProvider({ children }) {
         return res.data.user;
     }
 
+    // Registrasi akun baru (role otomatis "petugas" dari backend).
+    // Setelah berhasil, langsung dianggap login (backend juga mengembalikan token).
+    async function register(namaLengkap, username, password, passwordConfirmation) {
+        const res = await api.post('/register', {
+            nama_lengkap: namaLengkap,
+            username,
+            password,
+            password_confirmation: passwordConfirmation,
+        });
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        return res.data.user;
+    }
+
     async function logout() {
         try {
             await api.post('/logout');
@@ -29,7 +44,7 @@ export function AuthProvider({ children }) {
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     );

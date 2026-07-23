@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { PageHeader, Card, Button, Input } from '../../components/ui';
+import { useToast } from '../../context/ToastContext';
 
 export default function KendaraanMasuk() {
     const [kendaraanList, setKendaraanList] = useState([]);
@@ -8,38 +9,53 @@ export default function KendaraanMasuk() {
     const [areaList, setAreaList] = useState([]);
     const [cari, setCari] = useState('');
     const [form, setForm] = useState({ id_kendaraan: '', id_tarif: '', id_area: '' });
-    const [message, setMessage] = useState(null);
-    const [error, setError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const { showSuccess, showError } = useToast();
 
     useEffect(() => {
         async function load() {
-            const [tarif, area] = await Promise.all([
-                api.get('/tarif'),
-                api.get('/area-parkir'),
-            ]);
-            setTarifList(tarif.data);
-            setAreaList(area.data);
+            try {
+                const [tarif, area] = await Promise.all([
+                    api.get('/tarif'),
+                    api.get('/area-parkir'),
+                ]);
+                setTarifList(tarif.data);
+                setAreaList(area.data);
+            } catch (err) {
+                showError('Gagal memuat data tarif/area parkir.');
+            }
         }
         load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     async function handleCari(e) {
         e.preventDefault();
         if (!cari.trim()) return;
-        const res = await api.get(`/kendaraan/cari/${cari}`);
-        setKendaraanList(res.data);
+        try {
+            const res = await api.get(`/kendaraan/cari/${cari}`);
+            setKendaraanList(res.data);
+            if (res.data.length === 0) {
+                showError(`Tidak ada kendaraan dengan plat nomor "${cari}".`);
+            }
+        } catch (err) {
+            showError(err.response?.data?.message || 'Gagal mencari kendaraan.');
+        }
     }
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setError('');
-        setMessage(null);
+        setSubmitting(true);
         try {
             const res = await api.post('/transaksi/masuk', form);
-            setMessage(`Kendaraan berhasil dicatat masuk. ID transaksi: ${res.data.data.id_parkir}`);
+            showSuccess(`Kendaraan berhasil dicatat masuk. ID transaksi: ${res.data.data.id_parkir}`);
             setForm({ id_kendaraan: '', id_tarif: '', id_area: '' });
+            setKendaraanList([]);
+            setCari('');
         } catch (err) {
-            setError(err.response?.data?.message || 'Gagal mencatat kendaraan masuk');
+            showError(err.response?.data?.message || 'Gagal mencatat kendaraan masuk.');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -122,14 +138,12 @@ export default function KendaraanMasuk() {
 
                         {!form.id_kendaraan && (
                             <p className="text-xs text-[#8B94A3]">
-                                Cari & pilih kendaraan terlebih dahulu di atas.
+                                Cari &amp; pilih kendaraan terlebih dahulu di atas.
                             </p>
                         )}
-                        {error && <p className="text-sm text-[#E5484D]">{error}</p>}
-                        {message && <p className="text-sm text-[#35C48D]">{message}</p>}
 
-                        <Button type="submit" disabled={!form.id_kendaraan}>
-                            Catat Kendaraan Masuk
+                        <Button type="submit" disabled={!form.id_kendaraan || submitting}>
+                            {submitting ? 'Memproses...' : 'Catat Kendaraan Masuk'}
                         </Button>
                     </form>
                 </Card>

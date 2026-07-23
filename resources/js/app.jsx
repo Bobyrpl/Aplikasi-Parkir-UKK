@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Landing from './pages/Landing';
+import Bantuan from './pages/Bantuan';
 
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import Users from './pages/admin/Users';
@@ -28,116 +31,120 @@ function Beranda() {
 export default function App() {
     return (
         <BrowserRouter>
-            <AuthProvider>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/" element={<Beranda />} />
+            <ToastProvider>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/bantuan" element={<Bantuan />} />
+                        <Route path="/" element={<Beranda />} />
 
-                    {/* ADMIN */}
-                    <Route
-                        path="/admin"
-                        element={
-                            <ProtectedRoute allowedRoles={['admin']}>
-                                <Layout><DashboardAdmin /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/users"
-                        element={
-                            <ProtectedRoute allowedRoles={['admin']}>
-                                <Layout><Users /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/tarif"
-                        element={
-                            <ProtectedRoute allowedRoles={['admin']}>
-                                <Layout><Tarif /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/area"
-                        element={
-                            <ProtectedRoute allowedRoles={['admin']}>
-                                <Layout><AreaParkir /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/kendaraan"
-                        element={
-                            <ProtectedRoute allowedRoles={['admin']}>
-                                <Layout><Kendaraan /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/log"
-                        element={
-                            <ProtectedRoute allowedRoles={['admin']}>
-                                <Layout><LogAktivitas /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* ADMIN */}
+                        <Route
+                            path="/admin"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <Layout><DashboardAdmin /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/users"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <Layout><Users /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/tarif"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <Layout><Tarif /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/area"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <Layout><AreaParkir /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/kendaraan"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <Layout><Kendaraan /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/log"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <Layout><LogAktivitas /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    {/* PETUGAS */}
-                    <Route
-                        path="/petugas"
-                        element={
-                            <ProtectedRoute allowedRoles={['petugas']}>
-                                <Layout><DashboardPetugas /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/petugas/masuk"
-                        element={
-                            <ProtectedRoute allowedRoles={['petugas']}>
-                                <Layout><KendaraanMasuk /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/petugas/keluar"
-                        element={
-                            <ProtectedRoute allowedRoles={['petugas']}>
-                                <Layout><KendaraanKeluar /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/petugas/transaksi"
-                        element={
-                            <ProtectedRoute allowedRoles={['petugas']}>
-                                <Layout><Transaksi /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* PETUGAS */}
+                        <Route
+                            path="/petugas"
+                            element={
+                                <ProtectedRoute allowedRoles={['petugas']}>
+                                    <Layout><DashboardPetugas /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/petugas/masuk"
+                            element={
+                                <ProtectedRoute allowedRoles={['petugas']}>
+                                    <Layout><KendaraanMasuk /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/petugas/keluar"
+                            element={
+                                <ProtectedRoute allowedRoles={['petugas']}>
+                                    <Layout><KendaraanKeluar /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/petugas/transaksi"
+                            element={
+                                <ProtectedRoute allowedRoles={['petugas']}>
+                                    <Layout><Transaksi /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    {/* OWNER */}
-                    <Route
-                        path="/owner"
-                        element={
-                            <ProtectedRoute allowedRoles={['owner']}>
-                                <Layout><DashboardOwner /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/owner/rekap"
-                        element={
-                            <ProtectedRoute allowedRoles={['owner']}>
-                                <Layout><Rekap /></Layout>
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* OWNER */}
+                        <Route
+                            path="/owner"
+                            element={
+                                <ProtectedRoute allowedRoles={['owner']}>
+                                    <Layout><DashboardOwner /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/owner/rekap"
+                            element={
+                                <ProtectedRoute allowedRoles={['owner']}>
+                                    <Layout><Rekap /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-            </AuthProvider>
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </AuthProvider>
+            </ToastProvider>
         </BrowserRouter>
     );
 }

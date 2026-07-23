@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { PageHeader, Table, Badge, Button } from '../../components/ui';
 import StrukCard from '../../components/StrukCard';
+import { useToast } from '../../context/ToastContext';
 
 export default function Transaksi() {
     const [data, setData] = useState([]);
     const [struk, setStruk] = useState(null);
     const [loadingId, setLoadingId] = useState(null);
+    const { showError } = useToast();
 
     useEffect(() => {
         async function load() {
@@ -22,7 +24,7 @@ export default function Transaksi() {
             const res = await api.get(`/transaksi/${id}/struk`);
             setStruk(res.data);
         } catch (err) {
-            alert('Gagal memuat struk transaksi ini');
+            showError(err.response?.data?.message || 'Gagal memuat struk transaksi ini.');
         } finally {
             setLoadingId(null);
         }

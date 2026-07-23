@@ -11,6 +11,52 @@ use Illuminate\Support\Facades\Validator;
 class AuthController extends Controller
 {
     /**
+     * POST /api/register
+     * Registrasi akun baru (publik, tidak perlu login).
+     * Role otomatis "petugas" — role tidak boleh dipilih sendiri oleh
+     * pengguna demi keamanan (admin/owner cuma boleh dibuat oleh admin
+     * lewat menu Kelola User).
+     */
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nama_lengkap'         => 'required|string|max:50',
+            'username'             => 'required|string|max:50|unique:tb_user,username',
+            'password'             => 'required|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Data tidak valid',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::create([
+            'nama_lengkap' => $request->nama_lengkap,
+            'username'     => $request->username,
+            'password'     => $request->password, // otomatis ke-hash (cast 'hashed')
+            'role'         => 'petugas',
+            'status_aktif' => true,
+        ]);
+
+        $token = $user->createToken('token-' . $user->username)->plainTextToken;
+
+        LogAktivitas::catat($user->id_user, 'Registrasi akun baru sebagai ' . $user->role);
+
+        return response()->json([
+            'message' => 'Registrasi berhasil',
+            'user'    => [
+                'id_user'      => $user->id_user,
+                'nama_lengkap' => $user->nama_lengkap,
+                'username'     => $user->username,
+                'role'         => $user->role,
+            ],
+            'token' => $token,
+        ], 201);
+    }
+
+    /**
      * POST /api/login
      * Login pakai username & password (bukan email).
      * Semua role (admin, petugas, owner) lewat endpoint yang sama.
