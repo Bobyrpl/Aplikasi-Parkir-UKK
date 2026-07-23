@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Transaksi extends Model
 {
@@ -61,6 +62,8 @@ class Transaksi extends Model
      * ========================================================== */
 
     // Hitung durasi (jam, dibulatkan ke atas) & biaya saat kendaraan keluar
+    // Perhitungan biaya didelegasikan ke FUNCTION MySQL fn_hitung_biaya_parkir
+    // (lihat migration 2026_07_23_010000_add_db_objects_untuk_parkir.php)
     public function hitungBiayaKeluar(): void
     {
         $masuk  = $this->waktu_masuk;
@@ -69,8 +72,13 @@ class Transaksi extends Model
         $jam = (int) ceil($masuk->diffInMinutes($keluar) / 60);
         $jam = max(1, $jam); // minimal dihitung 1 jam
 
+        $biaya = DB::selectOne(
+            'SELECT fn_hitung_biaya_parkir(?, ?, ?) AS biaya',
+            [$masuk, $keluar, $this->tarif->tarif_per_jam]
+        );
+
         $this->durasi_jam  = $jam;
-        $this->biaya_total = $jam * $this->tarif->tarif_per_jam;
+        $this->biaya_total = $biaya->biaya;
         $this->status      = 'keluar';
     }
 }

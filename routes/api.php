@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | CRUD User, Tarif, Area Parkir, Kendaraan, Akses Log Aktivitas
     |----------------------------------------------------------------
     */
+    //  {#9a0,7}
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('tarif', TarifController::class)->except(['index', 'show']);
@@ -61,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Transaksi & Cetak Struk Parkir
     |----------------------------------------------------------------
     */
+    //  {#af1,7}
     Route::middleware('role:petugas')->group(function () {
         Route::post('/transaksi/masuk', [TransaksiController::class, 'kendaraanMasuk']);
         Route::post('/transaksi/{id}/keluar', [TransaksiController::class, 'kendaraanKeluar']);
@@ -75,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Rekap transaksi sesuai rentang waktu yang diminta
     |----------------------------------------------------------------
     */
+    //  {#fbe,3}
     Route::middleware('role:owner')->group(function () {
         Route::get('/rekap-transaksi', [TransaksiController::class, 'rekap']);
     });

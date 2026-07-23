@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ParkirKu — Sistem Manajemen Parkir</title>
+    <title> Sistem Parkir Pelabuhan Tanjung Perak </title>
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/main.jsx'])
 </head>

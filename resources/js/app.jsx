@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
 import Login from './pages/Login';
+import Landing from './pages/Landing';
 
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import Users from './pages/admin/Users';
@@ -21,11 +22,7 @@ import DashboardOwner from './pages/owner/DashboardOwner';
 import Rekap from './pages/owner/Rekap';
 
 function Beranda() {
-    const { user } = useAuth();
-    if (!user) return <Navigate to="/login" replace />;
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
-    if (user.role === 'petugas') return <Navigate to="/petugas" replace />;
-    return <Navigate to="/owner" replace />;
+    return <Landing />;
 }
 
 export default function App() {

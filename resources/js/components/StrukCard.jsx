@@ -41,7 +41,7 @@ export default function StrukCard({ struk, onClose }) {
                     />
                     <div className="p-6 font-mono text-sm">
                         <p className="text-center font-display text-lg tracking-tight mb-1">
-                            ParkirKu
+                            PARKIR PELABUHAN TANJUNG PERAK
                         </p>
                         <p className="text-center text-xs text-[#6B7280] mb-4">
                             STRUK PARKIR — {struk.no_struk}

@@ -45,11 +45,11 @@ export default function Login() {
                         <div className="flex items-center gap-2">
                             <span className="h-2.5 w-2.5 rounded-full bg-[#F4B400]" />
                             <span className="font-display text-2xl tracking-tight text-[#EDEFF2]">
-                                Parkir 
+                                SISTEM  PARKIR PELABUHAN TANJUNG PERAK
                             </span>
                         </div>
                         <p className="mt-2 text-sm text-[#8B94A3] font-mono">
-                            SISTEM MANAJEMEN PARKIR
+                            SISTEM MANAJEMEN PARKIR PELABUHAN TANJUNG PERAK
                         </p>
                     </div>
 

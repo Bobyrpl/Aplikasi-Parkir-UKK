@@ -62,11 +62,11 @@ export default function Layout({ children }) {
                         <div className="flex items-center gap-2">
                             <span className="h-2.5 w-2.5 rounded-full bg-[#F4B400]" />
                             <span className="font-display text-lg tracking-tight">
-                                ParkirKu
+                                PANEL SISTEM PARKIR 
                             </span>
                         </div>
                         <p className="mt-1 text-xs text-[#8B94A3] font-mono">
-                            SISTEM MANAJEMEN PARKIR
+                            SISTEM MANAJEMEN PARKIR PELABUHAN 
                         </p>
                     </div>
                     {/* Tombol tutup, hanya tampil di mobile */}
@@ -128,7 +128,7 @@ export default function Layout({ children }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <span className="font-display text-base tracking-tight">ParkirKu</span>
+                    <span className="font-display text-base tracking-tight">Parkir</span>
                 </div>
 
                 {/* garis palang khas parkir di bagian atas */}

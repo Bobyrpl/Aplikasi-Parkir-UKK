@@ -7,6 +7,7 @@ use App\Models\LogAktivitas;
 use App\Models\Tarif;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class TransaksiController extends Controller
@@ -42,21 +43,33 @@ class TransaksiController extends Controller
             return response()->json(['message' => 'Area parkir sudah penuh'], 422);
         }
 
-        $transaksi = Transaksi::create([
-            'id_kendaraan' => $request->id_kendaraan,
-            'waktu_masuk'  => now(),
-            'id_tarif'     => $request->id_tarif,
-            'durasi_jam'   => 0,
-            'biaya_total'  => 0,
-            'status'       => 'masuk',
-            'id_user'      => $request->user()->id_user,
-            'id_area'      => $request->id_area,
-        ]);
+        try {
+            $transaksi = DB::transaction(function () use ($request) {
+                // INSERT transaksi. Slot 'terisi' di tb_area_parkir otomatis
+                // bertambah lewat trigger trg_transaksi_masuk_update_area,
+                // jadi tidak perlu di-increment manual di sini.
+                $transaksi = Transaksi::create([
+                    'id_kendaraan' => $request->id_kendaraan,
+                    'waktu_masuk'  => now(),
+                    'id_tarif'     => $request->id_tarif,
+                    'durasi_jam'   => 0,
+                    'biaya_total'  => 0,
+                    'status'       => 'masuk',
+                    'id_user'      => $request->user()->id_user,
+                    'id_area'      => $request->id_area,
+                ]);
 
-        // Update slot terisi di area parkir
-        $area->increment('terisi');
+                LogAktivitas::catat(
+                    $request->user()->id_user,
+                    'Mencatat kendaraan masuk parkir (id_parkir: ' . $transaksi->id_parkir . ')'
+                );
 
-        LogAktivitas::catat($request->user()->id_user, 'Mencatat kendaraan masuk parkir (id_parkir: ' . $transaksi->id_parkir . ')');
+                return $transaksi;
+            });
+        } catch (\Throwable $e) {
+            // DB::transaction otomatis ROLLBACK kalau ada exception di dalam closure
+            return response()->json(['message' => 'Gagal mencatat kendaraan masuk, silakan coba lagi'], 500);
+        }
 
         return response()->json([
             'message' => 'Kendaraan berhasil dicatat masuk',
@@ -78,17 +91,23 @@ class TransaksiController extends Controller
             return response()->json(['message' => 'Transaksi ini sudah selesai (kendaraan sudah keluar)'], 422);
         }
 
-        $transaksi->waktu_keluar = now();
-        $transaksi->hitungBiayaKeluar(); // helper di model Transaksi
-        $transaksi->save();
+        try {
+            DB::transaction(function () use ($request, $transaksi) {
+                $transaksi->waktu_keluar = now();
+                $transaksi->hitungBiayaKeluar(); // helper di model Transaksi (pakai FUNCTION MySQL)
+                $transaksi->save();
+                // Slot 'terisi' di tb_area_parkir otomatis berkurang lewat trigger
+                // trg_transaksi_keluar_update_area, jadi tidak perlu decrement manual.
 
-        // Kurangi slot terisi di area parkir
-        $area = AreaParkir::find($transaksi->id_area);
-        if ($area && $area->terisi > 0) {
-            $area->decrement('terisi');
+                LogAktivitas::catat(
+                    $request->user()->id_user,
+                    'Mencatat kendaraan keluar parkir (id_parkir: ' . $transaksi->id_parkir . ')'
+                );
+            });
+        } catch (\Throwable $e) {
+            // DB::transaction otomatis ROLLBACK kalau ada exception di dalam closure
+            return response()->json(['message' => 'Gagal mencatat kendaraan keluar, silakan coba lagi'], 500);
         }
-
-        LogAktivitas::catat($request->user()->id_user, 'Mencatat kendaraan keluar parkir (id_parkir: ' . $transaksi->id_parkir . ')');
 
         return response()->json([
             'message' => 'Kendaraan berhasil dicatat keluar',
@@ -142,10 +161,14 @@ class TransaksiController extends Controller
         $totalPendapatan = $transaksi->sum('biaya_total');
         $totalTransaksi  = $transaksi->count();
 
+        // Rincian per hari (Senin, Selasa, dst) memakai STORED PROCEDURE sp_rekap_periode
+        $rincianHarian = DB::select('CALL sp_rekap_periode(?, ?)', [$request->dari, $request->sampai]);
+
         return response()->json([
             'periode'          => $request->dari . ' s/d ' . $request->sampai,
             'total_transaksi'  => $totalTransaksi,
             'total_pendapatan' => $totalPendapatan,
+            'rincian_harian'   => $rincianHarian,
             'data'             => $transaksi,
         ]);
     }
