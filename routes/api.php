@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Create/update/delete tetap khusus admin (lihat grup di atas).
     |----------------------------------------------------------------
     */
-    Route::middleware('role:admin,petugas')->group(function () {
+    Route::middleware('role:admin,petugas,pelanggan')->group(function () {
         Route::get('/tarif', [TarifController::class, 'index']);
         Route::get('/tarif/{tarif}', [TarifController::class, 'show']);
         Route::get('/area-parkir', [AreaParkirController::class, 'index']);

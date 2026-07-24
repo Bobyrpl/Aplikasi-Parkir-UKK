@@ -3,6 +3,33 @@ import api from '../../api/axios';
 import { PageHeader, Card, Button, Input } from '../../components/ui';
 import { useToast } from '../../context/ToastContext';
 
+// Cari tarif yang jenis_kendaraan-nya sama persis dengan kendaraan yang dipilih
+function cariTarifOtomatis(tarifList, jenisKendaraan) {
+    if (!jenisKendaraan) return null;
+    const target = jenisKendaraan.trim().toLowerCase();
+    return tarifList.find((t) => t.jenis_kendaraan.trim().toLowerCase() === target) || null;
+}
+
+// Cari area yang namanya mengandung jenis kendaraan (mis. "motor" -> "Area A - Motor")
+// dan masih ada slot kosong. Kalau tidak ada yang kosong, tetap kembalikan area yang
+// namanya cocok (supaya bisa ditampilkan sebagai "penuh"), biar pesannya jelas.
+function cariAreaOtomatis(areaList, jenisKendaraan) {
+    if (!jenisKendaraan) return { area: null, alasanTidakAda: null };
+    const target = jenisKendaraan.trim().toLowerCase();
+
+    const areaCocok = areaList.filter((a) => a.nama_area.toLowerCase().includes(target));
+
+    if (areaCocok.length === 0) {
+        return { area: null, alasanTidakAda: 'notfound' };
+    }
+
+    const adaSlot = areaCocok.find((a) => a.terisi < a.kapasitas);
+    if (adaSlot) return { area: adaSlot, alasanTidakAda: null };
+
+    // semua area yang cocok penuh -> tetap tunjukkan salah satunya biar pesannya jelas
+    return { area: areaCocok[0], alasanTidakAda: 'penuh' };
+}
+
 export default function Booking() {
     const [kendaraanList, setKendaraanList] = useState([]);
     const [tarifList, setTarifList] = useState([]);
@@ -14,13 +41,17 @@ export default function Booking() {
 
     const [form, setForm] = useState({
         id_kendaraan: '',
-        id_area: '',
-        id_tarif: '',
         tanggal_rencana: '',
         jam_rencana_masuk: '',
         jam_rencana_keluar: '',
         catatan: '',
     });
+
+    // Tarif & area yang dipilih sistem secara otomatis (bukan pilihan pelanggan lagi)
+    const [tarifOtomatis, setTarifOtomatis] = useState(null);
+    const [areaOtomatis, setAreaOtomatis] = useState(null);
+    const [areaAlasanTidakAda, setAreaAlasanTidakAda] = useState(null);
+
     const [submitting, setSubmitting] = useState(false);
     const [kodeSukses, setKodeSukses] = useState(null);
     const { showSuccess, showError } = useToast();
@@ -45,6 +76,24 @@ export default function Booking() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Setiap kendaraan yang dipilih berubah (atau data tarif/area baru selesai dimuat),
+    // hitung ulang tarif & area otomatisnya.
+    useEffect(() => {
+        const kendaraan = kendaraanList.find((k) => k.id_kendaraan === form.id_kendaraan);
+        if (!kendaraan) {
+            setTarifOtomatis(null);
+            setAreaOtomatis(null);
+            setAreaAlasanTidakAda(null);
+            return;
+        }
+
+        setTarifOtomatis(cariTarifOtomatis(tarifList, kendaraan.jenis_kendaraan));
+
+        const { area, alasanTidakAda } = cariAreaOtomatis(areaList, kendaraan.jenis_kendaraan);
+        setAreaOtomatis(area);
+        setAreaAlasanTidakAda(alasanTidakAda);
+    }, [form.id_kendaraan, kendaraanList, tarifList, areaList]);
+
     async function handleTambahKendaraan(e) {
         e.preventDefault();
         setSavingKendaraan(true);
@@ -64,16 +113,24 @@ export default function Booking() {
 
     async function handleSubmit(e) {
         e.preventDefault();
+        if (!tarifOtomatis || !areaOtomatis) return;
+
         setSubmitting(true);
         setKodeSukses(null);
         try {
-            const res = await api.post('/booking', form);
+            const res = await api.post('/booking', {
+                id_kendaraan: form.id_kendaraan,
+                id_tarif: tarifOtomatis.id_tarif,
+                id_area: areaOtomatis.id_area,
+                tanggal_rencana: form.tanggal_rencana,
+                jam_rencana_masuk: form.jam_rencana_masuk,
+                jam_rencana_keluar: form.jam_rencana_keluar,
+                catatan: form.catatan,
+            });
             setKodeSukses(res.data.data.kode_booking);
             showSuccess('Booking berhasil dibuat! Tunjukkan kode booking ke petugas saat tiba.');
             setForm({
                 id_kendaraan: '',
-                id_area: '',
-                id_tarif: '',
                 tanggal_rencana: '',
                 jam_rencana_masuk: '',
                 jam_rencana_keluar: '',
@@ -87,6 +144,20 @@ export default function Booking() {
     }
 
     const today = new Date().toISOString().slice(0, 10);
+    const kendaraanTerpilih = kendaraanList.find((k) => k.id_kendaraan === form.id_kendaraan);
+
+    // Pesan kenapa booking belum bisa disubmit, biar jelas dan bukan tombol mati tanpa alasan
+    let alasanTidakBisaSubmit = null;
+    if (!form.id_kendaraan) {
+        alasanTidakBisaSubmit = 'Pilih kendaraan terlebih dahulu di atas.';
+    } else if (!tarifOtomatis) {
+        alasanTidakBisaSubmit = `Tarif untuk jenis kendaraan "${kendaraanTerpilih?.jenis_kendaraan}" belum diatur. Hubungi admin.`;
+    } else if (!areaOtomatis) {
+        alasanTidakBisaSubmit =
+            areaAlasanTidakAda === 'penuh'
+                ? `Area parkir untuk kendaraan jenis "${kendaraanTerpilih?.jenis_kendaraan}" sedang penuh.`
+                : `Belum ada area parkir untuk jenis kendaraan "${kendaraanTerpilih?.jenis_kendaraan}".`;
+    }
 
     return (
         <div>
@@ -128,12 +199,19 @@ export default function Booking() {
                                 onChange={(e) => setFormKendaraan({ ...formKendaraan, plat_nomor: e.target.value })}
                                 required
                             />
-                            <Input
-                                placeholder="Jenis kendaraan, mis. Mobil / Motor / Truk"
+                            <select
                                 value={formKendaraan.jenis_kendaraan}
                                 onChange={(e) => setFormKendaraan({ ...formKendaraan, jenis_kendaraan: e.target.value })}
                                 required
-                            />
+                                className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2 text-sm text-[#EDEFF2] focus:outline-none focus:ring-2 focus:ring-[#F4B400]"
+                            >
+                                <option value="">Pilih jenis kendaraan</option>
+                                {tarifList.map((t) => (
+                                    <option key={t.id_tarif} value={t.jenis_kendaraan}>
+                                        {t.jenis_kendaraan.charAt(0).toUpperCase() + t.jenis_kendaraan.slice(1)}
+                                    </option>
+                                ))}
+                            </select>
                             <Input
                                 placeholder="Warna (opsional)"
                                 value={formKendaraan.warna}
@@ -172,38 +250,24 @@ export default function Booking() {
                 <Card className="p-5">
                     <h2 className="font-display text-base text-[#EDEFF2] mb-3">Rencana Parkir</h2>
                     <form onSubmit={handleSubmit} className="space-y-3">
-                        <div>
-                            <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">TARIF</label>
-                            <select
-                                value={form.id_tarif}
-                                onChange={(e) => setForm({ ...form, id_tarif: e.target.value })}
-                                required
-                                className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2 text-sm text-[#EDEFF2] focus:outline-none focus:ring-2 focus:ring-[#F4B400]"
-                            >
-                                <option value="">Pilih tarif</option>
-                                {tarifList.map((t) => (
-                                    <option key={t.id_tarif} value={t.id_tarif}>
-                                        {t.jenis_kendaraan} — Rp {Number(t.tarif_per_jam).toLocaleString('id-ID')}/jam
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-mono text-[#8B94A3] mb-1.5">AREA PARKIR</label>
-                            <select
-                                value={form.id_area}
-                                onChange={(e) => setForm({ ...form, id_area: e.target.value })}
-                                required
-                                className="w-full rounded-md bg-[#14181F] border border-white/10 px-3 py-2 text-sm text-[#EDEFF2] focus:outline-none focus:ring-2 focus:ring-[#F4B400]"
-                            >
-                                <option value="">Pilih area</option>
-                                {areaList.map((a) => (
-                                    <option key={a.id_area} value={a.id_area} disabled={a.terisi >= a.kapasitas}>
-                                        {a.nama_area} ({a.terisi}/{a.kapasitas}){a.terisi >= a.kapasitas ? ' - Penuh' : ''}
-                                    </option>
-                                ))}
-                            </select>
+                        {/* Tarif & area sekarang otomatis, bukan pilihan manual lagi */}
+                        <div className="rounded-md border border-white/10 bg-white/5 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-mono text-[#8B94A3]">TARIF (OTOMATIS)</span>
+                                <span className="text-sm text-[#EDEFF2]">
+                                    {tarifOtomatis
+                                        ? `${tarifOtomatis.jenis_kendaraan} — Rp ${Number(tarifOtomatis.tarif_per_jam).toLocaleString('id-ID')}/jam`
+                                        : '—'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-mono text-[#8B94A3]">AREA (OTOMATIS)</span>
+                                <span className="text-sm text-[#EDEFF2]">
+                                    {areaOtomatis
+                                        ? `${areaOtomatis.nama_area} (${areaOtomatis.terisi}/${areaOtomatis.kapasitas})`
+                                        : '—'}
+                                </span>
+                            </div>
                         </div>
 
                         <div>
@@ -246,11 +310,11 @@ export default function Booking() {
                             />
                         </div>
 
-                        {!form.id_kendaraan && (
-                            <p className="text-xs text-[#8B94A3]">Pilih kendaraan terlebih dahulu di atas.</p>
+                        {alasanTidakBisaSubmit && (
+                            <p className="text-xs text-[#8B94A3]">{alasanTidakBisaSubmit}</p>
                         )}
 
-                        <Button type="submit" disabled={!form.id_kendaraan || submitting}>
+                        <Button type="submit" disabled={!!alasanTidakBisaSubmit || submitting}>
                             {submitting ? 'Memproses...' : 'Buat Booking'}
                         </Button>
                     </form>
