@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
         return res.data.user;
     }
 
-    // Registrasi akun baru (role otomatis "petugas" dari backend).
+    // Registrasi akun baru (role otomatis "pelanggan" dari backend).
     // Setelah berhasil, langsung dianggap login (backend juga mengembalikan token).
     async function register(namaLengkap, username, noTelp, password, passwordConfirmation) {
         const res = await api.post('/register', {

@@ -14,9 +14,10 @@ class AuthController extends Controller
     /**
      * POST /api/register
      * Registrasi akun baru (publik, tidak perlu login).
-     * Role otomatis "petugas" — role tidak boleh dipilih sendiri oleh
-     * pengguna demi keamanan (admin/owner cuma boleh dibuat oleh admin
-     * lewat menu Kelola User).
+     * Role otomatis "pelanggan" — akun publik yang bisa booking parkir
+     * online. Role tidak boleh dipilih sendiri oleh pengguna demi
+     * keamanan (admin/petugas/owner cuma boleh dibuat oleh admin lewat
+     * menu Kelola User).
      * Passkey langsung digenerate saat registrasi supaya bisa
      * ditampilkan ke user (buat auto-login lain kali).
      */
@@ -41,7 +42,7 @@ class AuthController extends Controller
             'username'     => $request->username,
             'no_telp'      => $request->no_telp,
             'password'     => $request->password, // otomatis ke-hash (cast 'hashed')
-            'role'         => 'petugas',
+            'role'         => 'pelanggan',
             'status_aktif' => true,
         ]);
 

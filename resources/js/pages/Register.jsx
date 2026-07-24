@@ -22,8 +22,8 @@ export default function Register() {
 
         try {
             await register(namaLengkap, username, noTelp, password, passwordConfirmation);
-            // Role baru selalu "petugas", jadi langsung arahkan ke portal petugas
-            navigate('/petugas');
+            // Role baru selalu "pelanggan", jadi langsung arahkan ke portal booking
+            navigate('/pelanggan');
         } catch (err) {
             if (err.response?.status === 422) {
                 setErrors(err.response.data.errors || {});
@@ -62,8 +62,8 @@ export default function Register() {
 
                     <div className="relative pl-10">
                         <p className="text-[#C3C9D3] text-sm leading-relaxed">
-                            Daftar sebagai petugas untuk mulai mencatat kendaraan
-                            masuk dan keluar di portal ini.
+                            Daftar sebagai pelanggan untuk booking slot parkir
+                            online sebelum tiba di pelabuhan.
                         </p>
                         <div className="mt-6 flex gap-4 text-xs font-mono text-[#8B94A3]">
                             <span>ADMIN</span>
@@ -71,6 +71,8 @@ export default function Register() {
                             <span>PETUGAS</span>
                             <span>·</span>
                             <span>OWNER</span>
+                            <span>·</span>
+                            <span>PELANGGAN</span>
                         </div>
                     </div>
                 </div>
@@ -91,7 +93,7 @@ export default function Register() {
                         Buat akun baru
                     </h1>
                     <p className="text-sm text-[#8B94A3] mb-8">
-                        Akun baru terdaftar otomatis sebagai petugas.
+                        Akun baru terdaftar otomatis sebagai pelanggan — bisa langsung booking parkir online.
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">

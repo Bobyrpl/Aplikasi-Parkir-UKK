@@ -19,7 +19,8 @@ export default function Login() {
             const user = await login(username, password);
             if (user.role === 'admin') navigate('/admin');
             else if (user.role === 'petugas') navigate('/petugas');
-            else navigate('/owner');
+            else if (user.role === 'owner') navigate('/owner');
+            else navigate('/pelanggan');
         } catch (err) {
             setError(
                 err.response?.data?.message || 'Username atau password salah'

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AreaParkirController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\KendaraanController;
 use App\Http\Controllers\LogAktivitasController;
 use App\Http\Controllers\TarifController;
@@ -71,6 +72,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/transaksi/{id}/struk', [TransaksiController::class, 'cetakStruk']);
         Route::get('/transaksi', [TransaksiController::class, 'index']);
         Route::get('/transaksi/kendaraan-didalam', [TransaksiController::class, 'kendaraanDidalam']);
+    });
+
+    /*
+    |----------------------------------------------------------------
+    | BOOKING PARKIR ONLINE
+    |----------------------------------------------------------------
+    */
+    // Khusus pelanggan - bikin & kelola booking miliknya sendiri
+    Route::middleware('role:pelanggan')->group(function () {
+        Route::get('/booking/saya', [BookingController::class, 'bookingSaya']);
+        Route::post('/booking', [BookingController::class, 'store']);
+        Route::delete('/booking/{id}', [BookingController::class, 'batalkan']);
+
+        // pelanggan daftarkan & lihat kendaraan miliknya sendiri (buat dipilih saat booking)
+        Route::get('/kendaraan-saya', [KendaraanController::class, 'kendaraanSaya']);
+        Route::post('/kendaraan-saya', [KendaraanController::class, 'store']);
+    });
+
+    // Khusus admin/petugas - kelola booking yang masuk
+    Route::middleware('role:admin,petugas')->group(function () {
+        Route::get('/booking', [BookingController::class, 'index']);
+        Route::get('/booking/cari/{kode_booking}', [BookingController::class, 'cariByKode']);
+        Route::post('/booking/{id}/konfirmasi', [BookingController::class, 'konfirmasi']);
+        Route::post('/booking/{id}/tolak', [BookingController::class, 'tolak']);
     });
 
     /*

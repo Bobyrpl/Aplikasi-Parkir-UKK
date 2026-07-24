@@ -8,9 +8,35 @@ export default function KendaraanMasuk() {
     const [tarifList, setTarifList] = useState([]);
     const [areaList, setAreaList] = useState([]);
     const [cari, setCari] = useState('');
-    const [form, setForm] = useState({ id_kendaraan: '', id_tarif: '', id_area: '' });
+    const [form, setForm] = useState({ id_kendaraan: '', id_tarif: '', id_area: '', id_booking: '' });
     const [submitting, setSubmitting] = useState(false);
+    const [kodeBooking, setKodeBooking] = useState('');
+    const [bookingInfo, setBookingInfo] = useState(null);
+    const [cariBookingLoading, setCariBookingLoading] = useState(false);
     const { showSuccess, showError } = useToast();
+
+    async function handleCariBooking(e) {
+        e.preventDefault();
+        if (!kodeBooking.trim()) return;
+        setCariBookingLoading(true);
+        try {
+            const res = await api.get(`/booking/cari/${kodeBooking.trim()}`);
+            const b = res.data;
+            setBookingInfo(b);
+            setForm({
+                id_kendaraan: b.id_kendaraan,
+                id_tarif: b.id_tarif,
+                id_area: b.id_area,
+                id_booking: b.id_booking,
+            });
+            showSuccess(`Booking ditemukan: ${b.kendaraan?.plat_nomor}`);
+        } catch (err) {
+            setBookingInfo(null);
+            showError(err.response?.data?.message || 'Kode booking tidak ditemukan.');
+        } finally {
+            setCariBookingLoading(false);
+        }
+    }
 
     useEffect(() => {
         async function load() {
@@ -49,9 +75,11 @@ export default function KendaraanMasuk() {
         try {
             const res = await api.post('/transaksi/masuk', form);
             showSuccess(`Kendaraan berhasil dicatat masuk. ID transaksi: ${res.data.data.id_parkir}`);
-            setForm({ id_kendaraan: '', id_tarif: '', id_area: '' });
+            setForm({ id_kendaraan: '', id_tarif: '', id_area: '', id_booking: '' });
             setKendaraanList([]);
             setCari('');
+            setKodeBooking('');
+            setBookingInfo(null);
         } catch (err) {
             showError(err.response?.data?.message || 'Gagal mencatat kendaraan masuk.');
         } finally {
@@ -69,7 +97,27 @@ export default function KendaraanMasuk() {
 
             <div className="max-w-xl space-y-6">
                 <Card className="p-5">
-                    <h2 className="font-display text-base text-[#EDEFF2] mb-3">Cari Kendaraan (plat nomor)</h2>
+                    <h2 className="font-display text-base text-[#EDEFF2] mb-3">Punya Kode Booking?</h2>
+                    <form onSubmit={handleCariBooking} className="flex gap-2">
+                        <Input
+                            className="font-mono uppercase"
+                            value={kodeBooking}
+                            onChange={(e) => setKodeBooking(e.target.value)}
+                            placeholder="mis. BKG-7F3K9A"
+                        />
+                        <Button type="submit" disabled={cariBookingLoading}>
+                            {cariBookingLoading ? 'Mencari...' : 'Cari'}
+                        </Button>
+                    </form>
+                    {bookingInfo && (
+                        <p className="mt-3 text-xs text-[#35C48D]">
+                            Booking dipakai: {bookingInfo.kendaraan?.plat_nomor} — {bookingInfo.area?.nama_area}. Form di bawah otomatis terisi.
+                        </p>
+                    )}
+                </Card>
+
+                <Card className="p-5">
+                    <h2 className="font-display text-base text-[#EDEFF2] mb-3">atau Cari Kendaraan (plat nomor)</h2>
                     <form onSubmit={handleCari} className="flex gap-2">
                         <Input
                             className="font-mono uppercase"
@@ -86,7 +134,10 @@ export default function KendaraanMasuk() {
                                 <button
                                     key={k.id_kendaraan}
                                     type="button"
-                                    onClick={() => setForm({ ...form, id_kendaraan: k.id_kendaraan })}
+                                    onClick={() => {
+                                        setForm({ ...form, id_kendaraan: k.id_kendaraan, id_booking: '' });
+                                        setBookingInfo(null);
+                                    }}
                                     className={`w-full text-left rounded-md px-3 py-2 text-sm font-mono border ${
                                         form.id_kendaraan === k.id_kendaraan
                                             ? 'border-[#F4B400] bg-[#F4B400]/10 text-[#F4B400]'

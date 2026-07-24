@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AreaParkir;
+use App\Models\Booking;
 use App\Models\LogAktivitas;
 use App\Models\Tarif;
 use App\Models\Transaksi;
@@ -51,6 +52,9 @@ class TransaksiController extends Controller
             'id_kendaraan' => 'required|exists:tb_kendaraan,id_kendaraan',
             'id_tarif'     => 'required|exists:tb_tarif,id_tarif',
             'id_area'      => 'required|exists:tb_area_parkir,id_area',
+            // opsional: diisi kalau kendaraan ini datang dari booking online
+            // yang sudah dikonfirmasi (lihat BookingController::cariByKode)
+            'id_booking'   => 'nullable|exists:tb_booking,id_booking',
         ]);
 
         if ($validator->fails()) {
@@ -63,8 +67,16 @@ class TransaksiController extends Controller
             return response()->json(['message' => 'Area parkir sudah penuh'], 422);
         }
 
+        $booking = null;
+        if ($request->filled('id_booking')) {
+            $booking = Booking::find($request->id_booking);
+            if (! $booking || $booking->status !== 'dikonfirmasi') {
+                return response()->json(['message' => 'Booking tidak valid atau belum dikonfirmasi'], 422);
+            }
+        }
+
         try {
-            $transaksi = DB::transaction(function () use ($request) {
+            $transaksi = DB::transaction(function () use ($request, $booking) {
                 // INSERT transaksi. Slot 'terisi' di tb_area_parkir otomatis
                 // bertambah lewat trigger trg_transaksi_masuk_update_area,
                 // jadi tidak perlu di-increment manual di sini.
@@ -77,11 +89,16 @@ class TransaksiController extends Controller
                     'status'       => 'masuk',
                     'id_user'      => $request->user()->id_user,
                     'id_area'      => $request->id_area,
+                    'id_booking'   => $booking?->id_booking,
                 ]);
+
+                // Booking yang berhasil diproses jadi transaksi nyata -> selesai
+                $booking?->update(['status' => 'selesai']);
 
                 LogAktivitas::catat(
                     $request->user()->id_user,
                     'Mencatat kendaraan masuk parkir (id_parkir: ' . $transaksi->id_parkir . ')'
+                        . ($booking ? ' dari booking ' . $booking->kode_booking : '')
                 );
 
                 return $transaksi;

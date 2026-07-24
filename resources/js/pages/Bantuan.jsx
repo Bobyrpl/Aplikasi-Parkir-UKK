@@ -25,8 +25,8 @@ const FAQ = [
 ];
 
 const KONTAK = [
-    { label: "Email Support", value: "support@parkirku.id" },
-    { label: "WhatsApp Admin", value: "0812-3456-7890" },
+    { label: "Email Support", value: "support@parkirTanjungPerak.id" },
+    { label: "WhatsApp Admin", value: "0857-2803-5284" },
     { label: "Jam Operasional", value: "Senin–Sabtu, 08.00–17.00 WIB" },
 ];
 
@@ -159,7 +159,7 @@ export default function Bantuan() {
 
             <footer className="border-t border-white/5">
                 <div className="max-w-4xl mx-auto px-6 md:px-12 py-6 flex items-center justify-between text-xs text-[#8B94A3]">
-                    <span>© {new Date().getFullYear()} ParkirKu</span>
+                    <span>© {new Date().getFullYear()} Parkir Pelabuhan Tanjung Perak</span>
                     <span className="font-mono">PUSAT BANTUAN</span>
                 </div>
             </footer>

@@ -20,9 +20,13 @@ import DashboardPetugas from './pages/petugas/DashboardPetugas';
 import KendaraanMasuk from './pages/petugas/KendaraanMasuk';
 import KendaraanKeluar from './pages/petugas/KendaraanKeluar';
 import Transaksi from './pages/petugas/Transaksi';
+import BookingPetugas from './pages/petugas/Booking';
 
 import DashboardOwner from './pages/owner/DashboardOwner';
 import Rekap from './pages/owner/Rekap';
+
+import Booking from './pages/pelanggan/Booking';
+import RiwayatBooking from './pages/pelanggan/RiwayatBooking';
 
 function Beranda() {
     return <Landing />;
@@ -119,6 +123,32 @@ export default function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['petugas']}>
                                     <Layout><Transaksi /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/petugas/booking"
+                            element={
+                                <ProtectedRoute allowedRoles={['petugas', 'admin']}>
+                                    <Layout><BookingPetugas /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        {/* PELANGGAN */}
+                        <Route
+                            path="/pelanggan"
+                            element={
+                                <ProtectedRoute allowedRoles={['pelanggan']}>
+                                    <Layout><Booking /></Layout>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/pelanggan/riwayat"
+                            element={
+                                <ProtectedRoute allowedRoles={['pelanggan']}>
+                                    <Layout><RiwayatBooking /></Layout>
                                 </ProtectedRoute>
                             }
                         />

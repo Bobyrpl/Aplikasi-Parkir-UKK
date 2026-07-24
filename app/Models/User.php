@@ -62,6 +62,12 @@ public $timestamps = false;   // <-- TAMBAHKAN BARIS INI
         return $this->hasMany(LogAktivitas::class, 'id_user', 'id_user');
     }
 
+    // Satu pelanggan bisa membuat banyak booking parkir
+    public function booking()
+    {
+        return $this->hasMany(Booking::class, 'id_user', 'id_user');
+    }
+
     /* ==========================================================
      * HELPER ROLE (buat cek hak akses di controller/middleware)
      * ========================================================== */
@@ -79,5 +85,10 @@ public $timestamps = false;   // <-- TAMBAHKAN BARIS INI
     public function isOwner(): bool
     {
         return $this->role === 'owner';
+    }
+
+    public function isPelanggan(): bool
+    {
+        return $this->role === 'pelanggan';
     }
 }

@@ -109,4 +109,15 @@ class KendaraanController extends Controller
 
         return response()->json($kendaraan);
     }
+
+    // GET /api/kendaraan-saya
+    // Khusus pelanggan - daftar kendaraan miliknya sendiri (dipakai saat booking)
+    public function kendaraanSaya(Request $request)
+    {
+        $kendaraan = Kendaraan::where('id_user', $request->user()->id_user)
+            ->orderBy('id_kendaraan', 'desc')
+            ->get();
+
+        return response()->json($kendaraan);
+    }
 }

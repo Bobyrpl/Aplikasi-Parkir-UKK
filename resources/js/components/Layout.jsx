@@ -9,6 +9,7 @@ const MENU = {
         { to: '/admin/tarif', label: 'Tarif Parkir' },
         { to: '/admin/area', label: 'Area Parkir' },
         { to: '/admin/kendaraan', label: 'Kendaraan' },
+        { to: '/petugas/booking', label: 'Booking Masuk' },
         { to: '/admin/log', label: 'Log Aktivitas' },
     ],
     petugas: [
@@ -16,10 +17,15 @@ const MENU = {
         { to: '/petugas/masuk', label: 'Kendaraan Masuk' },
         { to: '/petugas/keluar', label: 'Kendaraan Keluar' },
         { to: '/petugas/transaksi', label: 'Riwayat Transaksi' },
+        { to: '/petugas/booking', label: 'Booking Masuk' },
     ],
     owner: [
         { to: '/owner', label: 'Ringkasan', end: true },
         { to: '/owner/rekap', label: 'Rekap Transaksi' },
+    ],
+    pelanggan: [
+        { to: '/pelanggan', label: 'Booking Parkir', end: true },
+        { to: '/pelanggan/riwayat', label: 'Booking Saya' },
     ],
 };
 
@@ -27,6 +33,7 @@ const ROLE_LABEL = {
     admin: 'Administrator',
     petugas: 'Petugas Lapangan',
     owner: 'Pemilik Usaha',
+    pelanggan: 'Pelanggan',
 };
 
 export default function Layout({ children }) {

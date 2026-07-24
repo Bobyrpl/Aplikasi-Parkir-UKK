@@ -6,6 +6,7 @@ import { PageHeader, StatCard, Card, Button } from "../../components/ui";
 export default function DashboardPetugas() {
     const [hariIni, setHariIni] = useState({ transaksi: "—", pendapatan: "—" });
     const [kendaraanDidalam, setKendaraanDidalam] = useState("—");
+    const [bookingMenunggu, setBookingMenunggu] = useState("—");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -40,8 +41,19 @@ export default function DashboardPetugas() {
             }
         }
 
+        async function loadBookingMenunggu() {
+            try {
+                const res = await api.get("/booking", { params: { status: "menunggu" } });
+                const data = res.data.data ?? res.data;
+                setBookingMenunggu(data.length ?? 0);
+            } catch (e) {
+                // biarkan tampil '—' kalau gagal fetch
+            }
+        }
+
         loadRekapHariIni();
         loadKendaraanDidalam();
+        loadBookingMenunggu();
     }, []);
 
     return (
@@ -52,7 +64,7 @@ export default function DashboardPetugas() {
                 description="Catat kendaraan masuk/keluar dan pantau transaksi harian dari sini."
             />
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <StatCard
                     label="TRANSAKSI HARI INI"
                     value={loading ? "—" : hariIni.transaksi}
@@ -67,9 +79,14 @@ export default function DashboardPetugas() {
                     value={kendaraanDidalam}
                     accent="#F4B400"
                 />
+                <StatCard
+                    label="BOOKING MENUNGGU"
+                    value={bookingMenunggu}
+                    accent="#F4B400"
+                />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <div className="grid md:grid-cols-4 gap-4 mb-8">
                 <Card className="p-6 flex flex-col">
                     <h2 className="font-display text-base text-[#EDEFF2] mb-1">
                         Kendaraan Masuk
@@ -104,6 +121,20 @@ export default function DashboardPetugas() {
                     <Link to="/petugas/transaksi">
                         <Button variant="ghost" className="w-full">
                             Lihat Riwayat
+                        </Button>
+                    </Link>
+                </Card>
+
+                <Card className="p-6 flex flex-col">
+                    <h2 className="font-display text-base text-[#EDEFF2] mb-1">
+                        Booking Masuk
+                    </h2>
+                    <p className="text-sm text-[#8B94A3] mb-4 flex-1">
+                        Konfirmasi atau tolak booking parkir online dari pelanggan.
+                    </p>
+                    <Link to="/petugas/booking">
+                        <Button variant="ghost" className="w-full">
+                            Kelola Booking
                         </Button>
                     </Link>
                 </Card>

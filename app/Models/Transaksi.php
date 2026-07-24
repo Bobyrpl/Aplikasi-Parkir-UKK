@@ -25,6 +25,7 @@ class Transaksi extends Model
         'status',
         'id_user',
         'id_area',
+        'id_booking',
     ];
 
     protected $casts = [
@@ -55,6 +56,11 @@ class Transaksi extends Model
     public function area()
     {
         return $this->belongsTo(AreaParkir::class, 'id_area', 'id_area');
+    }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class, 'id_booking', 'id_booking');
     }
 
     /* ==========================================================
